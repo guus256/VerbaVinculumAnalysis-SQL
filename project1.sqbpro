@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="C:/Users/ZAK/OneDrive/Desktop/My Portfolio Build/sql/projectdemo.db" readonly="0" foreign_keys="1" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><main_tabs open="structure browser pragmas query" current="3"/></window><tab_structure><column_width id="0" width="300"/><column_width id="1" width="0"/><column_width id="2" width="100"/><column_width id="3" width="1434"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="1" parent="1"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><current_table name="4,10:mainphoto_tags"/><default_encoding codec=""/><browse_table_settings><table schema="main" name="comments" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="40"/><column index="2" value="238"/><column index="3" value="56"/><column index="4" value="65"/><column index="5" value="177"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="follows" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="79"/><column index="2" value="81"/><column index="3" value="160"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="likes" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="56"/><column index="2" value="65"/><column index="3" value="157"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="photo_tags" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="65"/><column index="2" value="49"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="photos" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort><column index="4" mode="0"/></sort><column_widths><column index="1" value="40"/><column index="2" value="138"/><column index="3" value="56"/><column index="4" value="155"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="sqlite_sequence" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="43"/><column index="2" value="40"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="tags" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="40"/><column index="2" value="116"/><column index="3" value="156"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="users" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="40"/><column index="2" value="148"/><column index="3" value="154"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table></browse_table_settings></tab_browse><tab_sql><sql name="Challenges">/* Business questions at hand:
+
+1. We want to reward our users who have been around the longest. Find the 5 oldest users.
+2. What day of the week do most users register on? We need to figure out when to schedule an ad campgain.
+3. We want to target our inactive users with an email campaign. Find the users who have never posted a photo.
+4. We're running a new contest to see who can get the most likes on a single photo. WHO WON??
+5. Our Investors want to know...How many times does the average user post?
+6. State the user ranking by postings higher to lower.
+7. State the Total Posts by users (longer versionof SELECT COUNT(*)FROM photos).
+8. State the total numbers of users who have posted at least one time. 
+9. A brand wants to know which hashtags to use in a post What are the top 5 most commonly used hashtags?
+10. We have a small problem with bots on our site...Find users who have liked every single photo on the site. 
+11. We also have a problem with celebrities. Find users who have never commented on a photo. 
+
+The following require more exploration.
+
+12. Find the percentage of our users who have either never commented on a photo or have commented on every photo. 
+13. Find users who have ever commented on a photo.
+*/</sql><sql name="EDA">-- qn1
+SELECT * FROM users
+ORDER BY created_at, username 
+LIMIT 5;
+--Alternative solution;
+SELECT *, CURRENT_TIMESTAMP - created_at AS duration 
+FROM users 
+ORDER BY duration DESC, username ASC 
+LIMIT 5
+
+--qn2
+SELECT strftime( '%w' , users.created_at ) AS day_of_week, 
+	   COUNT(*) number_of_registrations
+FROM users 
+GROUP BY day_of_week
+ORDER BY 2 DESC
+
+--qn3 We want to target our inactive users with an email campaign. Find the users who have never posted a photo.
+SELECT username 
+FROM users
+LEFT JOIN photos 
+ON users.id = photos.user_id
+WHERE photos.id IS NULL 
+
+--qn4 We're running a new contest to see who can get the most likes on a single photo. WHO WON??
+ SELECT users.username, photos.id, photos.image_url, COUNT(*) AS total_likes
+ FROM likes 
+ INNER JOIN photos ON likes.photo_id = photos.id 
+ INNER JOIN users ON users.id = likes.user_id 
+ GROUP BY 1
+ ORDER BY total_likes DESC 
+ LIMIT 1
+
+ --qn5 Our Investors want to know...How many times does the average user post?
+SELECT ROUND((SELECT COUNT(*) FROM photos)/(SELECT COUNT(*) FROM users),2) AS no_of_avg_posters
+
+--qn6 state the user ranking by postings higher to lower.
+
+SELECT users.username, COUNT(photos.image_url) as user_count
+FROM users
+JOIN photos ON users.id = photos.user_id 
+GROUP BY 1
+ORDER BY 2 DESC 
+
+--qn7 get the total postings for all users (without COUNT(*) from photos)
+ SELECT SUM(sub.user_count) total_postings
+ FROM (SELECT users.username, COUNT(photos.image_url) as user_count
+FROM users
+JOIN photos ON users.id = photos.user_id 
+GROUP BY 1
+ORDER BY 2 DESC) sub 
+
+--qn8 State the total numbers of users who have posted at least one time. 
+SELECT COUNT(DISTINCT(users.id)) AS no_of_users_w_posts
+FROM users 
+JOIN photos ON users.id = photos.user_id
+
+--qn9 A brand wants to know which hashtags to use in a post What are the top 5 most commonly used hashtags?
+
+SELECT tag_name, COUNT(tag_name) as no_of_tags
+FROM tags
+JOIN photo_tags ON tags.id = photo_tags.tag_id
+GROUP BY tags.id
+ORDER BY 2 DESC 
+LIMIT 5
+
+--qn10 We have a small problem with bots on our site...Find users who have liked every single photo on the site. 
+
+SELECT users.id, users.username, COUNT(users.id) as total_likes_per_user
+FROM users
+JOIN likes ON users.id = likes.user_id
+GROUP BY users.id
+HAVING total_likes_per_user = (SELECT COUNT(*) FROM photos)
+
+--qn11  We also have a problem with celebrities. Find users who have never commented on a photo. 
+
+SELECT users.username, comments.comment_text
+FROM users 
+LEFT JOIN comments ON users.id = comments.user_id
+GROUP BY users.id
+HAVING comments.comment_text IS NULL 
+
+--qn12 Find the percentage of our users who have either never commented on a photo or have liked every photo. 
+
+--this query shows users that never commented on any photo
+SELECT users.username, comments.comment_text
+FROM users 
+LEFT JOIN comments ON users.id = comments.user_id
+HAVING comments.comment_text IS NULL 
+
+--this query shows the number of users that liked every photo
+SELECT users.id, COUNT(users.id) AS liked_every_photo
+FROM users
+JOIN likes ON users.id = likes.user_id
+HAVING liked_every_photo = (SELECT COUNT(*) FROM photos)
+
+--this final query shows the percentage of the above 
+
+SELECT sub1.total_sub1 AS never_commented, 
+	   (sub1.total_sub1/(SELECT COUNT(*) FROM users))*100 AS perc_no_comment,
+		sub2.total_sub2 AS liked_all_photos,
+		(sub2.total_sub2/(SELECT COUNT(*) FROM users))*100 AS perc_liked_all
+FROM (
+		SELECT COUNT(*) AS total_sub1
+		FROM(SELECT users.username, comments.comment_text
+			FROM users 
+			LEFT JOIN comments ON users.id = comments.user_id
+			GROUP BY users.id
+			HAVING comments.comment_text IS NULL ) AS total_no_of_no_comments
+	  ) AS sub1
+	  JOIN 
+	  (
+		SELECT COUNT(*) AS total_sub2
+		FROM (SELECT users.id, users.username, COUNT(users.id) AS liked_every_photo
+			FROM users
+			JOIN likes ON users.id = likes.user_id
+			GROUP BY users.id
+			HAVING liked_every_photo = (SELECT COUNT(*) FROM photos)) AS total_number_of_all_liked
+	  ) AS sub2
+
+--qn 13 Find users who have ever commented on a photo.
+SELECT COUNT(*) AS total_ever_commented
+		FROM(SELECT users.username, comments.comment_text
+			FROM users 
+			LEFT JOIN comments ON users.id = comments.user_id
+			GROUP BY users.id
+			HAVING comments.comment_text IS NOT NULL ) AS total_no_of_no_comments
+			
+
+
+</sql><current_tab id="1"/></tab_sql></sqlb_project>
