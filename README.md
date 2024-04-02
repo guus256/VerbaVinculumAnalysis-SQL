@@ -4,7 +4,7 @@
 - [Introduction](#introduction)
 - [Project Overview](#project-overview)
 - [Data Sources](#data-sources)
-- [Exploratory Data Analysis and Methodology](#exploratory-data-analysis)
+- [Exploratory Data Analysis and Methodology](#exploratory-data-analysis-and-methodology)
 - [Insights](#insights)
 - [Recommendations](#recommendations)
 
